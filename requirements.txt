@@ -1,0 +1,24 @@
+# Django
+Django==5.2.8
+djangorestframework==3.16.1
+
+# Base de datos
+psycopg[binary]==3.2.3
+
+# Autenticacion JWT
+djangorestframework-simplejwt==5.3.1
+
+# CORS
+django-cors-headers==4.3.1
+
+# Filtros API
+django-filter==24.3
+
+# Variables de entorno
+python-dotenv==1.0.0
+
+# Imagenes
+Pillow==11.0.0
+
+# Servidor WSGI produccion
+gunicorn==21.2.0

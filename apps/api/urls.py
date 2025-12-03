@@ -1,0 +1,56 @@
+from django.urls import include, path
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+
+app_name = 'api'
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_root(request):
+    """Endpoint raiz de la API."""
+    return Response({
+        'status': 'ok',
+        'endpoints': {
+            'auth': {
+                'login': '/api/auth/login/',
+                'refresh': '/api/auth/refresh/',
+                'logout': '/api/auth/logout/',
+                'me': '/api/auth/me/',
+            },
+            'vendedores': {
+                'list': '/api/vendedores/',
+                'detail': '/api/vendedores/{id}/',
+            },
+            'parametros': {
+                'cajas': '/api/parametros/cajas/',
+                'combustibles': '/api/parametros/combustibles/',
+                'condiciones': '/api/parametros/condiciones/',
+                'estados': '/api/parametros/estados/',
+                'ivas': '/api/parametros/ivas/',
+                'localidades': '/api/parametros/localidades/',
+                'marcas': '/api/parametros/marcas/',
+                'modelos': '/api/parametros/modelos/',
+                'monedas': '/api/parametros/monedas/',
+                'segmentos': '/api/parametros/segmentos/',
+            },
+            'vehiculos': {
+                'list': '/api/vehiculos/',
+                'detail': '/api/vehiculos/{id}/',
+                'imagenes': '/api/vehiculos/{id}/imagenes/',
+                'restaurar': '/api/vehiculos/{id}/restaurar/',
+                'marcar_vendido': '/api/vehiculos/{id}/marcar-vendido/',
+                'marcar_reservado': '/api/vehiculos/{id}/marcar-reservado/',
+            }
+        }
+    })
+
+
+urlpatterns = [
+    path('', api_root, name='root'),
+    path('auth/', include('apps.usuarios.urls', namespace='auth')),
+    path('vendedores/', include('apps.vendedores.urls', namespace='vendedores')),
+    path('parametros/', include('apps.parametros.urls', namespace='parametros')),
+    path('vehiculos/', include('apps.vehiculos.urls', namespace='vehiculos')),
+]
