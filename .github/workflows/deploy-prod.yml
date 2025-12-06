@@ -23,6 +23,9 @@ jobs:
           script: |
             cd /home/deploy/autobiliaria/prod
 
+            echo "🔧 Fixing permissions before deploy..."
+            chmod -R 777 /home/deploy/autobiliaria/prod/static /home/deploy/autobiliaria/prod/media 2>/dev/null || true
+
             echo "📥 Pulling latest changes..."
             git pull origin main
 
@@ -35,7 +38,8 @@ jobs:
             echo "📦 Collecting static files..."
             docker exec autobiliaria-backend-prod python manage.py collectstatic --noinput
 
-            echo "🔧 Fixing static file permissions..."
+            echo "🔧 Fixing static file permissions for nginx..."
             chown -R www-data:www-data /home/deploy/autobiliaria/prod/static
+            chmod -R 755 /home/deploy/autobiliaria/prod/static
 
             echo "✅ Production deploy complete!"
