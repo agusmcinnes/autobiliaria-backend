@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import (
@@ -67,6 +68,14 @@ class MarcaViewSet(ParametroBaseViewSet):
     queryset = Marca.objects.all()
     serializer_class = MarcaSerializer
 
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return MarcaConModelosSerializer
@@ -78,3 +87,11 @@ class ModeloViewSet(ParametroBaseViewSet):
     serializer_class = ModeloSerializer
     filterset_fields = ['activo', 'marca']
     search_fields = ['nombre', 'marca__nombre']
+
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
