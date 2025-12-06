@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Prefetch
 
@@ -40,6 +41,17 @@ class VehiculoViewSet(viewsets.ModelViewSet):
     search_fields = ['patente', 'marca__nombre', 'modelo__nombre', 'version', 'color']
     ordering_fields = ['precio', 'anio', 'km', 'created_at', 'marca__nombre']
     ordering = ['-created_at']
+
+    def get_permissions(self):
+        """
+        GET (list y retrieve) son públicos para que la web muestre los vehículos.
+        El resto de acciones requieren autenticación.
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         """
