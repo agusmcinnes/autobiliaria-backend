@@ -256,6 +256,21 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+    # Reverse proxy settings (Nginx)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+
+
+# =============================================================================
+# CSRF TRUSTED ORIGINS (requerido para Django 4+)
+# =============================================================================
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost:8000,http://127.0.0.1:8000'
+).split(',')
+
 
 # =============================================================================
 # LOGGING
