@@ -1,0 +1,41 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /home/deploy/autobiliaria/prod
+
+            echo "📥 Pulling latest changes..."
+            git pull origin main
+
+            echo "🔨 Building and restarting containers..."
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "🗃️ Running migrations..."
+            docker exec autobiliaria-backend-prod python manage.py migrate --noinput
+
+            echo "📦 Collecting static files..."
+            docker exec autobiliaria-backend-prod python manage.py collectstatic --noinput
+
+            echo "🔧 Fixing static file permissions..."
+            chown -R www-data:www-data /home/deploy/autobiliaria/prod/static
+
+            echo "✅ Production deploy complete!"
