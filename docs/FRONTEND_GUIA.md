@@ -164,7 +164,7 @@ const data = await response.json();
 //   "count": 50,
 //   "next": "https://api-dev.autobiliaria.cloud/api/vehiculos/?page=2",
 //   "previous": null,
-//   "results": [...]
+//   "results": [...]  // Ver estructura de respuesta más abajo
 // }
 ```
 
@@ -245,7 +245,9 @@ const data = await response.json();
       "moneda_nombre": "ARS",
       "estado": 2,
       "estado_nombre": "Usado",
+      "combustible": 1,
       "combustible_nombre": "Nafta",
+      "caja": 1,
       "caja_nombre": "Manual",
       "reservado": false,
       "vendido": false,
