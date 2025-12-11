@@ -115,7 +115,8 @@ media/
 
 # Django static files (collected)
 staticfiles/
-static/
+/static/
+!apps/*/static/
 
 # IDE
 .idea/

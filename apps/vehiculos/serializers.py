@@ -33,6 +33,8 @@ class VehiculoListSerializer(serializers.ModelSerializer):
     marca_nombre = serializers.CharField(source='marca.nombre', read_only=True)
     modelo_nombre = serializers.CharField(source='modelo.nombre', read_only=True)
     estado_nombre = serializers.CharField(source='estado.nombre', read_only=True)
+    combustible_nombre = serializers.CharField(source='combustible.nombre', read_only=True)
+    caja_nombre = serializers.CharField(source='caja.nombre', read_only=True)
     moneda_nombre = serializers.CharField(source='moneda.nombre', read_only=True)
     vendedor_nombre = serializers.CharField(source='vendedor_dueno.get_full_name', read_only=True)
     titulo = serializers.CharField(read_only=True)
@@ -59,6 +61,10 @@ class VehiculoListSerializer(serializers.ModelSerializer):
             'moneda_nombre',
             'estado',
             'estado_nombre',
+            'combustible',
+            'combustible_nombre',
+            'caja',
+            'caja_nombre',
             'vendedor_dueno',
             'vendedor_nombre',
             'reservado',
