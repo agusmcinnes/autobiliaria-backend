@@ -23,20 +23,24 @@ jobs:
           script: |
             cd /home/deploy/autobiliaria/dev
 
-            echo "🔧 Fixing permissions before deploy..."
-            chmod -R 777 /home/deploy/autobiliaria/dev/static /home/deploy/autobiliaria/dev/media 2>/dev/null || true
-
             echo "📥 Pulling latest changes..."
             git pull origin develop
 
+            echo "🔧 Fixing permissions before deploy..."
+            mkdir -p /home/deploy/autobiliaria/dev/static /home/deploy/autobiliaria/dev/media
+            chmod -R 777 /home/deploy/autobiliaria/dev/static /home/deploy/autobiliaria/dev/media
+
             echo "🔨 Building and restarting containers..."
-            docker compose -f docker-compose.dev.yml up -d --build
+            docker compose -f docker-compose.dev.yml up -d --build --force-recreate
+
+            echo "⏳ Waiting for container to be ready..."
+            sleep 10
 
             echo "🗃️ Running migrations..."
-            docker exec autobiliaria-backend-dev python manage.py migrate --noinput
+            docker exec autobiliaria-backend-dev python manage.py migrate --noinput || true
 
             echo "📦 Collecting static files..."
-            docker exec autobiliaria-backend-dev python manage.py collectstatic --noinput
+            docker exec autobiliaria-backend-dev python manage.py collectstatic --noinput || true
 
             echo "🔧 Fixing static file permissions for nginx..."
             chown -R www-data:www-data /home/deploy/autobiliaria/dev/static
