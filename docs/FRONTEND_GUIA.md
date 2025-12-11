@@ -142,6 +142,9 @@ Estos endpoints son accesibles sin login, para la web pública:
 | GET | `/api/parametros/marcas/{id}/` | Detalle de marca (con modelos) |
 | GET | `/api/parametros/modelos/` | Listar modelos |
 | GET | `/api/parametros/modelos/?marca={id}` | Modelos filtrados por marca |
+| GET | `/api/parametros/cajas/` | Listar cajas (Manual/Automática) |
+| GET | `/api/parametros/combustibles/` | Listar combustibles |
+| GET | `/api/parametros/segmentos/` | Listar segmentos |
 
 ---
 
@@ -180,6 +183,7 @@ const data = await response.json();
 | `precio_max` | decimal | Precio máximo |
 | `anio_min` | int | Año mínimo |
 | `anio_max` | int | Año máximo |
+| `km_min` | int | Kilometraje mínimo |
 | `km_max` | int | Kilometraje máximo |
 | `disponible` | bool | Solo disponibles (no vendido/reservado) |
 | `mostrar_en_web` | bool | Visible en web |

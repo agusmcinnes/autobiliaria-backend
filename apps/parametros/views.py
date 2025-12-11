@@ -28,10 +28,26 @@ class CajaViewSet(ParametroBaseViewSet):
     queryset = Caja.objects.all()
     serializer_class = CajaSerializer
 
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
 
 class CombustibleViewSet(ParametroBaseViewSet):
     queryset = Combustible.objects.all()
     serializer_class = CombustibleSerializer
+
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 
 class CondicionViewSet(ParametroBaseViewSet):
@@ -62,6 +78,14 @@ class MonedaViewSet(ParametroBaseViewSet):
 class SegmentoViewSet(ParametroBaseViewSet):
     queryset = Segmento.objects.all()
     serializer_class = SegmentoSerializer
+
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 
 class MarcaViewSet(ParametroBaseViewSet):
