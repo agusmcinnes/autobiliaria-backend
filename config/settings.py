@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.vendedores',
     'apps.parametros',
     'apps.vehiculos',
+    'apps.consultas',
 ]
 
 MIDDLEWARE = [
