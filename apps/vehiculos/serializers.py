@@ -37,6 +37,7 @@ class VehiculoListSerializer(serializers.ModelSerializer):
     caja_nombre = serializers.CharField(source='caja.nombre', read_only=True)
     moneda_nombre = serializers.CharField(source='moneda.nombre', read_only=True)
     vendedor_nombre = serializers.CharField(source='vendedor_dueno.get_full_name', read_only=True)
+    tipo_vehiculo_display = serializers.CharField(source='get_tipo_vehiculo_display', read_only=True)
     titulo = serializers.CharField(read_only=True)
     disponible = serializers.BooleanField(read_only=True)
     imagen_principal = serializers.SerializerMethodField()
@@ -48,6 +49,8 @@ class VehiculoListSerializer(serializers.ModelSerializer):
             'id',
             'titulo',
             'patente',
+            'tipo_vehiculo',
+            'tipo_vehiculo_display',
             'marca',
             'marca_nombre',
             'modelo',
@@ -114,6 +117,7 @@ class VehiculoSerializer(serializers.ModelSerializer):
 
     # Campos calculados
     titulo = serializers.CharField(read_only=True)
+    tipo_vehiculo_display = serializers.CharField(source='get_tipo_vehiculo_display', read_only=True)
     precio_financiado = serializers.DecimalField(
         max_digits=12, decimal_places=2, read_only=True
     )
@@ -153,6 +157,8 @@ class VehiculoSerializer(serializers.ModelSerializer):
             'vendedor_detail',
             'cargado_por_nombre',
             # Campos generales
+            'tipo_vehiculo',
+            'tipo_vehiculo_display',
             'version',
             'patente',
             'anio',

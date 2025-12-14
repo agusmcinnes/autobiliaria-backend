@@ -1,11 +1,14 @@
 import django_filters
 from django.db import models
 
-from .models import Vehiculo
+from .models import Vehiculo, TipoVehiculo
 
 
 class VehiculoFilter(django_filters.FilterSet):
     """Filtros avanzados para vehiculos."""
+
+    # Tipo de vehiculo
+    tipo_vehiculo = django_filters.ChoiceFilter(choices=TipoVehiculo.choices)
 
     # Rangos de precio
     precio_min = django_filters.NumberFilter(field_name='precio', lookup_expr='gte')

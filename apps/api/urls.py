@@ -49,6 +49,14 @@ def api_root(request):
                 'detail': '/api/consultas/{id}/',
                 'marcar_leida': '/api/consultas/{id}/marcar-leida/',
                 'marcar_atendida': '/api/consultas/{id}/marcar-atendida/',
+            },
+            'publicaciones': {
+                'tipos_vehiculo': '/api/publicaciones/tipos-vehiculo/',
+                'list': '/api/publicaciones/',
+                'create': '/api/publicaciones/',
+                'detail': '/api/publicaciones/{id}/',
+                'marcar_vista': '/api/publicaciones/{id}/marcar-vista/',
+                'marcar_eliminada': '/api/publicaciones/{id}/marcar-eliminada/',
             }
         }
     })
@@ -61,4 +69,5 @@ urlpatterns = [
     path('parametros/', include('apps.parametros.urls', namespace='parametros')),
     path('vehiculos/', include('apps.vehiculos.urls', namespace='vehiculos')),
     path('consultas/', include('apps.consultas.urls', namespace='consultas')),
+    path('publicaciones/', include('apps.publicaciones.urls', namespace='publicaciones')),
 ]
