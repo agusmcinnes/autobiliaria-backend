@@ -29,19 +29,18 @@ class ConsultaAdmin(admin.ModelAdmin):
         'vehiculo__patente',
         'vehiculo__marca__nombre',
     )
-    readonly_fields = (
-        'nombre',
-        'email',
-        'telefono',
-        'mensaje',
-        'tipo',
-        'vehiculo',
-        'created_at',
-        'updated_at',
-        'atendida_por',
-        'fecha_atendida',
-    )
     raw_id_fields = ('vehiculo',)
+
+    def get_readonly_fields(self, request, obj=None):
+        """Campos editables al crear, readonly al editar."""
+        if obj:  # Editando
+            return (
+                'nombre', 'email', 'telefono', 'mensaje',
+                'tipo', 'vehiculo', 'created_at', 'updated_at',
+                'atendida_por', 'fecha_atendida',
+            )
+        # Creando
+        return ('created_at', 'updated_at', 'atendida_por', 'fecha_atendida')
 
     fieldsets = (
         (_('Datos del Cliente'), {
