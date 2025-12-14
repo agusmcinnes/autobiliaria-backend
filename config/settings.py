@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.vendedores',
     'apps.parametros',
     'apps.vehiculos',
+    'apps.consultas',
 ]
 
 MIDDLEWARE = [
@@ -243,6 +244,15 @@ CORS_ALLOW_HEADERS = [
 
 
 # =============================================================================
+# REVERSE PROXY SETTINGS (Nginx)
+# =============================================================================
+# Siempre activo porque tanto dev como prod están detrás de nginx con HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+
+# =============================================================================
 # SECURITY SETTINGS (Produccion)
 # =============================================================================
 
@@ -255,11 +265,6 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # Reverse proxy settings (Nginx)
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    USE_X_FORWARDED_HOST = True
-    USE_X_FORWARDED_PORT = True
 
 
 # =============================================================================

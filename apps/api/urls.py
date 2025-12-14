@@ -42,6 +42,13 @@ def api_root(request):
                 'restaurar': '/api/vehiculos/{id}/restaurar/',
                 'marcar_vendido': '/api/vehiculos/{id}/marcar-vendido/',
                 'marcar_reservado': '/api/vehiculos/{id}/marcar-reservado/',
+            },
+            'consultas': {
+                'list': '/api/consultas/',
+                'create': '/api/consultas/',
+                'detail': '/api/consultas/{id}/',
+                'marcar_leida': '/api/consultas/{id}/marcar-leida/',
+                'marcar_atendida': '/api/consultas/{id}/marcar-atendida/',
             }
         }
     })
@@ -53,4 +60,5 @@ urlpatterns = [
     path('vendedores/', include('apps.vendedores.urls', namespace='vendedores')),
     path('parametros/', include('apps.parametros.urls', namespace='parametros')),
     path('vehiculos/', include('apps.vehiculos.urls', namespace='vehiculos')),
+    path('consultas/', include('apps.consultas.urls', namespace='consultas')),
 ]

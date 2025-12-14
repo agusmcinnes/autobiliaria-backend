@@ -34,19 +34,23 @@ Te pedirá la contraseña de root.
 
 ```
 /home/deploy/autobiliaria/
-├── prod/                    # ← PRODUCCIÓN
-│   ├── backend/             # Código fuente (rama main)
-│   │   ├── docker-compose.prod.yml
-│   │   ├── .env.prod        # Variables de entorno (SECRETO)
-│   │   └── ...
+├── prod/                    # ← PRODUCCIÓN (rama main)
+│   ├── docker-compose.prod.yml
+│   ├── .env.prod            # Variables de entorno (SECRETO)
+│   ├── apps/                # Código fuente
+│   │   ├── usuarios/
+│   │   ├── api/
+│   │   ├── vendedores/
+│   │   ├── parametros/
+│   │   ├── vehiculos/
+│   │   └── consultas/
 │   ├── static/              # Archivos CSS/JS de Django
 │   └── media/               # Imágenes subidas
 │
-├── dev/                     # ← DESARROLLO
-│   ├── backend/
-│   │   ├── docker-compose.dev.yml
-│   │   ├── .env.dev
-│   │   └── ...
+├── dev/                     # ← DESARROLLO (rama develop)
+│   ├── docker-compose.dev.yml
+│   ├── .env.dev
+│   ├── apps/
 │   ├── static/
 │   └── media/
 │
@@ -87,11 +91,11 @@ docker logs autobiliaria-backend-dev --tail 100 -f
 
 ```bash
 # Reiniciar producción
-cd /home/deploy/autobiliaria/prod/backend
+cd /home/deploy/autobiliaria/prod
 docker compose -f docker-compose.prod.yml restart
 
 # Reiniciar desarrollo
-cd /home/deploy/autobiliaria/dev/backend
+cd /home/deploy/autobiliaria/dev
 docker compose -f docker-compose.dev.yml restart
 ```
 
@@ -99,11 +103,11 @@ docker compose -f docker-compose.dev.yml restart
 
 ```bash
 # Detener producción (¡CUIDADO! La web quedará offline)
-cd /home/deploy/autobiliaria/prod/backend
+cd /home/deploy/autobiliaria/prod
 docker compose -f docker-compose.prod.yml down
 
 # Detener desarrollo
-cd /home/deploy/autobiliaria/dev/backend
+cd /home/deploy/autobiliaria/dev
 docker compose -f docker-compose.dev.yml down
 ```
 
@@ -111,49 +115,56 @@ docker compose -f docker-compose.dev.yml down
 
 ```bash
 # Iniciar producción
-cd /home/deploy/autobiliaria/prod/backend
+cd /home/deploy/autobiliaria/prod
 docker compose -f docker-compose.prod.yml up -d
 
 # Iniciar desarrollo
-cd /home/deploy/autobiliaria/dev/backend
+cd /home/deploy/autobiliaria/dev
 docker compose -f docker-compose.dev.yml up -d
 ```
 
 ---
 
-## 4. Actualizar el Código (Deploy)
+## 4. Deploy Automático (CI/CD)
 
-Cuando hagas cambios en el código y los subas a GitHub:
+El proyecto tiene **deploy automático** configurado con GitHub Actions:
 
-### Actualizar PRODUCCIÓN
+| Rama | Ambiente | URL |
+|------|----------|-----|
+| `main` | Producción | https://api.autobiliaria.cloud |
+| `develop` | Desarrollo | https://api-dev.autobiliaria.cloud |
+
+### Cómo funciona
+
+1. Hacés push a `develop` → Se despliega automáticamente a desarrollo
+2. Hacés push a `main` → Se despliega automáticamente a producción
+
+El CI/CD ejecuta automáticamente:
+- `git pull` de la rama correspondiente
+- `docker compose up -d --build --force-recreate`
+- `python manage.py migrate`
+- `python manage.py collectstatic`
+- Arregla permisos de archivos estáticos
+
+### Ver estado del deploy
+
+En GitHub → Actions podés ver el estado de cada deploy.
+
+### Deploy Manual (solo si falla el CI/CD)
 
 ```bash
-# 1. Conectate al servidor
+# DESARROLLO
 ssh root@92.112.177.217
-
-# 2. Ir a la carpeta de producción
-cd /home/deploy/autobiliaria/prod/backend
-
-# 3. Bajar los últimos cambios de GitHub
-git pull origin main
-
-# 4. Reconstruir y reiniciar (sin perder datos)
-docker compose -f docker-compose.prod.yml up -d --build
-
-# 5. Si agregaste nuevos modelos/campos, aplicar migraciones
-docker exec autobiliaria-backend-prod python manage.py migrate
-
-# 6. Verificar que funcione
-docker logs autobiliaria-backend-prod --tail 20
-```
-
-### Actualizar DESARROLLO
-
-```bash
-cd /home/deploy/autobiliaria/dev/backend
-git pull origin main  # o la rama que uses para dev
-docker compose -f docker-compose.dev.yml up -d --build
+cd /home/deploy/autobiliaria/dev
+git pull origin develop
+docker compose -f docker-compose.dev.yml up -d --build --force-recreate
 docker exec autobiliaria-backend-dev python manage.py migrate
+
+# PRODUCCIÓN
+cd /home/deploy/autobiliaria/prod
+git pull origin main
+docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+docker exec autobiliaria-backend-prod python manage.py migrate
 ```
 
 ---
@@ -358,7 +369,7 @@ docker system prune -a -f
 
 2. Si no aparece `autobiliaria-backend-prod`:
    ```bash
-   cd /home/deploy/autobiliaria/prod/backend
+   cd /home/deploy/autobiliaria/prod
    docker compose -f docker-compose.prod.yml up -d
    ```
 
@@ -384,7 +395,7 @@ chown -R www-data:www-data /home/deploy/autobiliaria/prod/static
 
 2. Si no está, levantarlo:
    ```bash
-   cd /home/deploy/autobiliaria/prod/backend
+   cd /home/deploy/autobiliaria/prod
    docker compose -f docker-compose.prod.yml up -d db-prod
    ```
 
@@ -512,12 +523,21 @@ docker ps
 # Ver logs producción
 docker logs autobiliaria-backend-prod --tail 100 -f
 
-# Actualizar producción
-cd /home/deploy/autobiliaria/prod/backend
+# Ver logs desarrollo
+docker logs autobiliaria-backend-dev --tail 100 -f
+
+# Deploy automático (solo hacer push a GitHub)
+git push origin develop   # → Despliega a desarrollo automáticamente
+git push origin main      # → Despliega a producción automáticamente
+
+# Deploy manual (solo si falla CI/CD)
+cd /home/deploy/autobiliaria/prod
 git pull origin main
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+docker exec autobiliaria-backend-prod python manage.py migrate
 
 # Reiniciar producción
+cd /home/deploy/autobiliaria/prod
 docker compose -f docker-compose.prod.yml restart
 
 # Backup de base de datos
