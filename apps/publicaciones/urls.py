@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import PublicacionViewSet, TiposVehiculoView
 
+app_name = 'publicaciones'
+
 router = DefaultRouter()
 router.register(r'', PublicacionViewSet, basename='publicacion')
 
