@@ -4,6 +4,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
 
+class TipoVehiculo(models.TextChoices):
+    """Tipos de vehiculos disponibles."""
+    AUTO = 'auto', 'Auto'
+    CAMIONETA = 'camioneta', 'Camioneta'
+    CAMION = 'camion', 'Camión'
+    MOTO = 'moto', 'Moto'
+
+
 class Vehiculo(models.Model):
     """
     Modelo principal para gestionar vehiculos del inventario.
@@ -91,6 +99,12 @@ class Vehiculo(models.Model):
     # ==========================================================================
     # CAMPOS GENERALES
     # ==========================================================================
+    tipo_vehiculo = models.CharField(
+        _('tipo de vehiculo'),
+        max_length=15,
+        choices=TipoVehiculo.choices,
+        default=TipoVehiculo.AUTO
+    )
     version = models.CharField(
         _('version'),
         max_length=100,

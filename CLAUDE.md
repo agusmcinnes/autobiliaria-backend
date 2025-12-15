@@ -43,16 +43,32 @@ backend/
 │   │   ├── urls.py             # /api/parametros/*
 │   │   ├── admin.py            # Admin para todos los parametros
 │   │   └── management/commands/cargar_parametros.py
-│   └── vehiculos/              # Inventario de vehiculos (IMPLEMENTADO)
-│       ├── models.py           # Vehiculo, ImagenVehiculo
-│       ├── serializers.py      # VehiculoSerializer, VehiculoListSerializer
-│       ├── views.py            # VehiculoViewSet (CRUD + acciones extra)
-│       ├── filters.py          # VehiculoFilter (filtros avanzados)
-│       ├── urls.py             # /api/vehiculos/*
+│   ├── vehiculos/              # Inventario de vehiculos (IMPLEMENTADO)
+│   │   ├── models.py           # Vehiculo, ImagenVehiculo, TipoVehiculo
+│   │   ├── serializers.py      # VehiculoSerializer, VehiculoListSerializer
+│   │   ├── views.py            # VehiculoViewSet (CRUD + acciones extra)
+│   │   ├── filters.py          # VehiculoFilter (filtros avanzados)
+│   │   ├── urls.py             # /api/vehiculos/*
+│   │   └── admin.py            # Admin con inlines
+│   ├── consultas/              # Consultas y reservas de clientes (IMPLEMENTADO)
+│   │   ├── models.py           # Consulta
+│   │   ├── serializers.py      # ConsultaSerializer
+│   │   ├── views.py            # ConsultaViewSet
+│   │   ├── filters.py          # ConsultaFilter
+│   │   ├── urls.py             # /api/consultas/*
+│   │   └── admin.py            # Admin con fieldsets
+│   └── publicaciones/          # Publicaciones de clientes (IMPLEMENTADO)
+│       ├── models.py           # PublicacionVehiculo, ImagenPublicacion
+│       ├── serializers.py      # PublicacionSerializer
+│       ├── views.py            # PublicacionViewSet
+│       ├── filters.py          # PublicacionFilter
+│       ├── urls.py             # /api/publicaciones/*
 │       └── admin.py            # Admin con inlines
 ├── docs/                       # Documentacion de APIs
 │   ├── vendedores.md
-│   └── parametros.md
+│   ├── parametros.md
+│   ├── consultas.md
+│   └── publicaciones.md
 ├── Dockerfile
 ├── docker-compose.yml
 ├── entrypoint.sh
@@ -67,6 +83,8 @@ backend/
 - `apps.vendedores` - Gestion de vendedores (duenos de autos)
 - `apps.parametros` - Catalogos (marcas, modelos, combustibles, etc.)
 - `apps.vehiculos` - Inventario de vehiculos
+- `apps.consultas` - Consultas y reservas de clientes
+- `apps.publicaciones` - Publicaciones de vehiculos de clientes
 
 ---
 
@@ -133,6 +151,13 @@ Modelo            # Focus, Corolla, etc. (FK a Marca)
 ## Modelo Vehiculo
 
 ```python
+# Tipos de vehiculo disponibles
+TipoVehiculo(TextChoices):
+    AUTO = 'auto'
+    CAMIONETA = 'camioneta'
+    CAMION = 'camion'
+    MOTO = 'moto'
+
 Vehiculo(Model):
     # Relaciones
     marca              # FK -> Marca
@@ -148,6 +173,7 @@ Vehiculo(Model):
     cargado_por        # FK -> Usuario
 
     # Campos generales
+    tipo_vehiculo      # CharField(15), choices=TipoVehiculo, default='auto'
     version            # CharField(100), opcional
     patente            # CharField(10), unique
     anio               # PositiveIntegerField
@@ -252,12 +278,43 @@ Todos los parametros tienen CRUD completo:
 | PATCH | `/api/vehiculos/{id}/marcar-reservado/` | Toggle reservado | Si |
 
 **Filtros:**
+- Por tipo: `?tipo_vehiculo=auto` (auto, camioneta, camion, moto)
 - Por FK: `?marca=1`, `?modelo=5`, `?combustible=2`, `?caja=1`, `?estado=1`, `?condicion=1`, `?moneda=1`, `?segmento=10`, `?vendedor=3`
 - Por rango: `?precio_min=10000&precio_max=50000`, `?anio_min=2018&anio_max=2023`, `?km_max=100000`
 - Booleanos: `?vendido=false`, `?reservado=false`, `?disponible=true`, `?mostrar_en_web=true`, `?publicado_en_ml=true`
 - Busqueda: `?search=ford+focus`
 - Orden: `?ordering=-precio,anio`
 - Incluir eliminados: `?include_deleted=true`
+
+### Consultas (`/api/consultas/`)
+
+| Metodo | URL | Descripcion | Auth |
+|--------|-----|-------------|------|
+| POST | `/api/consultas/` | Crear consulta/reserva | No |
+| GET | `/api/consultas/` | Listar consultas | Si |
+| GET | `/api/consultas/{id}/` | Detalle consulta | Si |
+| PATCH | `/api/consultas/{id}/` | Actualizar notas | Si |
+| PATCH | `/api/consultas/{id}/marcar-leida/` | Marcar como leida | Si |
+| PATCH | `/api/consultas/{id}/marcar-atendida/` | Marcar como atendida | Si |
+| DELETE | `/api/consultas/{id}/` | Eliminar consulta | Si |
+
+**Filtros:** `?tipo=consulta`, `?vehiculo=5`, `?leida=false`, `?atendida=false`, `?pendientes=true`
+
+### Publicaciones (`/api/publicaciones/`)
+
+| Metodo | URL | Descripcion | Auth |
+|--------|-----|-------------|------|
+| GET | `/api/publicaciones/tipos-vehiculo/` | Lista tipos vehiculo | No |
+| POST | `/api/publicaciones/` | Crear publicacion (multipart) | No |
+| GET | `/api/publicaciones/` | Listar publicaciones | Si |
+| GET | `/api/publicaciones/{id}/` | Detalle publicacion | Si |
+| PATCH | `/api/publicaciones/{id}/` | Actualizar notas | Si |
+| PATCH | `/api/publicaciones/{id}/marcar-vista/` | Marcar como vista | Si |
+| PATCH | `/api/publicaciones/{id}/marcar-eliminada/` | Marcar como eliminada | Si |
+| DELETE | `/api/publicaciones/{id}/` | Eliminar publicacion | Si |
+
+**Estados:** pendiente, vista, eliminada
+**Filtros:** `?estado=pendiente`, `?pendientes=true`, `?tipo_vehiculo=auto`, `?marca=5`
 
 ---
 
@@ -341,6 +398,8 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 - `docs/vendedores.md` - API de vendedores con ejemplos
 - `docs/parametros.md` - API de parametros con ejemplos
 - `docs/vehiculos.md` - API de vehiculos con ejemplos
+- `docs/consultas.md` - API de consultas y reservas
+- `docs/publicaciones.md` - API de publicaciones de clientes
 
 ## Datos Cargados
 

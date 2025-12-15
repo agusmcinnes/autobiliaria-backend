@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.parametros',
     'apps.vehiculos',
     'apps.consultas',
+    'apps.publicaciones',
 ]
 
 MIDDLEWARE = [

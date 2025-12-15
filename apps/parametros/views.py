@@ -59,6 +59,14 @@ class EstadoViewSet(ParametroBaseViewSet):
     queryset = Estado.objects.all()
     serializer_class = EstadoSerializer
 
+    def get_permissions(self):
+        """GET (list y retrieve) son públicos para los filtros de la web."""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
 
 class IvaViewSet(ParametroBaseViewSet):
     queryset = Iva.objects.all()

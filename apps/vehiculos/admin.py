@@ -69,6 +69,7 @@ class VehiculoAdmin(admin.ModelAdmin):
         'reservado',
         'mostrar_en_web',
         'publicado_en_ml',
+        'tipo_vehiculo',
         'marca',
         'estado',
         'combustible',
@@ -138,7 +139,7 @@ class VehiculoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Identificacion'), {
-            'fields': ('patente', 'marca', 'modelo', 'version', 'anio', 'color')
+            'fields': ('patente', 'tipo_vehiculo', 'marca', 'modelo', 'version', 'anio', 'color')
         }),
         (_('Segmentos'), {
             'fields': ('segmento1', 'segmento2'),
