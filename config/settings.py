@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.vehiculos',
     'apps.consultas',
     'apps.publicaciones',
+    'apps.reuniones',
 ]
 
 MIDDLEWARE = [

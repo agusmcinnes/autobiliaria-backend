@@ -57,6 +57,15 @@ def api_root(request):
                 'detail': '/api/publicaciones/{id}/',
                 'marcar_vista': '/api/publicaciones/{id}/marcar-vista/',
                 'marcar_eliminada': '/api/publicaciones/{id}/marcar-eliminada/',
+            },
+            'reuniones': {
+                'list': '/api/reuniones/',
+                'create': '/api/reuniones/',
+                'detail': '/api/reuniones/{id}/',
+                'estadisticas': '/api/reuniones/estadisticas/',
+                'por_fecha': '/api/reuniones/por-fecha/{fecha}/',
+                'marcar_completada': '/api/reuniones/{id}/marcar-completada/',
+                'marcar_cancelada': '/api/reuniones/{id}/marcar-cancelada/',
             }
         }
     })
@@ -70,4 +79,5 @@ urlpatterns = [
     path('vehiculos/', include('apps.vehiculos.urls', namespace='vehiculos')),
     path('consultas/', include('apps.consultas.urls', namespace='consultas')),
     path('publicaciones/', include('apps.publicaciones.urls', namespace='publicaciones')),
+    path('reuniones/', include('apps.reuniones.urls', namespace='reuniones')),
 ]
