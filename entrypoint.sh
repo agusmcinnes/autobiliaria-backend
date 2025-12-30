@@ -2,8 +2,10 @@
 
 set -e
 
-echo "Esperando a que PostgreSQL este disponible..."
-while ! nc -z db 5432; do
+DB_HOST=${DB_HOST:-db}
+
+echo "Esperando a que PostgreSQL este disponible en $DB_HOST..."
+while ! nc -z $DB_HOST 5432; do
   sleep 1
 done
 echo "PostgreSQL disponible!"
