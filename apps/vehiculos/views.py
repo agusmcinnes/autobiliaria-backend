@@ -181,3 +181,74 @@ class VehiculoViewSet(viewsets.ModelViewSet):
         vehiculo.save(update_fields=['reservado', 'updated_at'])
         serializer = VehiculoSerializer(vehiculo, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], url_path='reordenar-imagenes')
+    def reordenar_imagenes(self, request, pk=None):
+        """
+        Reordena las imágenes del vehículo.
+        Espera: { "orden": [{ "id": 1, "orden": 0 }, { "id": 2, "orden": 1 }, ...] }
+        """
+        vehiculo = self.get_object()
+        orden_data = request.data.get('orden', [])
+
+        if not orden_data:
+            return Response(
+                {'error': 'Se requiere el campo "orden" con lista de {id, orden}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar que todas las imágenes pertenezcan al vehículo
+        imagen_ids = [item['id'] for item in orden_data]
+        imagenes = vehiculo.imagenes.filter(id__in=imagen_ids)
+
+        if imagenes.count() != len(imagen_ids):
+            return Response(
+                {'error': 'Algunas imágenes no pertenecen a este vehículo.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Actualizar orden de cada imagen
+        for item in orden_data:
+            vehiculo.imagenes.filter(id=item['id']).update(orden=item['orden'])
+
+        # Retornar imágenes actualizadas
+        imagenes_actualizadas = vehiculo.imagenes.order_by('orden', 'created_at')
+        serializer = ImagenVehiculoSerializer(
+            imagenes_actualizadas,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=['patch'],
+        url_path='imagenes/(?P<imagen_id>[^/.]+)/principal'
+    )
+    def marcar_principal(self, request, pk=None, imagen_id=None):
+        """Marca una imagen como principal (quita el flag de las demás)."""
+        vehiculo = self.get_object()
+
+        try:
+            imagen = vehiculo.imagenes.get(pk=imagen_id)
+        except ImagenVehiculo.DoesNotExist:
+            return Response(
+                {'error': 'Imagen no encontrada.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Quitar es_principal de todas las imágenes del vehículo
+        vehiculo.imagenes.update(es_principal=False)
+
+        # Marcar esta como principal
+        imagen.es_principal = True
+        imagen.save(update_fields=['es_principal'])
+
+        # Retornar imágenes actualizadas
+        imagenes_actualizadas = vehiculo.imagenes.order_by('orden', 'created_at')
+        serializer = ImagenVehiculoSerializer(
+            imagenes_actualizadas,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data)
