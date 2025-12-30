@@ -37,7 +37,7 @@ class VehiculoListSerializer(serializers.ModelSerializer):
     caja_nombre = serializers.CharField(source='caja.nombre', read_only=True)
     moneda_nombre = serializers.CharField(source='moneda.nombre', read_only=True)
     vendedor_nombre = serializers.CharField(source='vendedor_dueno.get_full_name', read_only=True)
-    cargado_por_nombre = serializers.CharField(source='cargado_por.get_full_name', read_only=True)
+    cargado_por_nombre = serializers.SerializerMethodField()
     tipo_vehiculo_display = serializers.CharField(source='get_tipo_vehiculo_display', read_only=True)
     titulo = serializers.CharField(read_only=True)
     disponible = serializers.BooleanField(read_only=True)
@@ -83,6 +83,7 @@ class VehiculoListSerializer(serializers.ModelSerializer):
             'imagen_principal',
             'cant_imagenes',
             'created_at',
+            'updated_at',
         ]
 
     def get_imagen_principal(self, obj):
@@ -97,6 +98,12 @@ class VehiculoListSerializer(serializers.ModelSerializer):
 
     def get_cant_imagenes(self, obj):
         return obj.imagenes.count()
+
+    def get_cargado_por_nombre(self, obj):
+        if obj.cargado_por:
+            full_name = obj.cargado_por.get_full_name()
+            return full_name if full_name else obj.cargado_por.email
+        return None
 
 
 class VehiculoSerializer(serializers.ModelSerializer):
