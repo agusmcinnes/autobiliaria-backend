@@ -16,7 +16,8 @@ class Vendedor(models.Model):
     )
     email = models.EmailField(
         _('email'),
-        unique=True
+        blank=True,
+        default=''
     )
     direccion = models.CharField(
         _('dirección'),
