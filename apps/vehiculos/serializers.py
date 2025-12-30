@@ -37,6 +37,7 @@ class VehiculoListSerializer(serializers.ModelSerializer):
     caja_nombre = serializers.CharField(source='caja.nombre', read_only=True)
     moneda_nombre = serializers.CharField(source='moneda.nombre', read_only=True)
     vendedor_nombre = serializers.CharField(source='vendedor_dueno.get_full_name', read_only=True)
+    cargado_por_nombre = serializers.CharField(source='cargado_por.get_full_name', read_only=True)
     tipo_vehiculo_display = serializers.CharField(source='get_tipo_vehiculo_display', read_only=True)
     titulo = serializers.CharField(read_only=True)
     disponible = serializers.BooleanField(read_only=True)
@@ -70,6 +71,7 @@ class VehiculoListSerializer(serializers.ModelSerializer):
             'caja_nombre',
             'vendedor_dueno',
             'vendedor_nombre',
+            'cargado_por_nombre',
             'reservado',
             'vendido',
             'disponible',
