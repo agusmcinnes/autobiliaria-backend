@@ -66,6 +66,20 @@ def api_root(request):
                 'por_fecha': '/api/reuniones/por-fecha/{fecha}/',
                 'marcar_completada': '/api/reuniones/{id}/marcar-completada/',
                 'marcar_cancelada': '/api/reuniones/{id}/marcar-cancelada/',
+            },
+            'mercadolibre': {
+                'status': '/api/mercadolibre/status/',
+                'auth_url': '/api/mercadolibre/auth/url/',
+                'auth_callback': '/api/mercadolibre/auth/callback/',
+                'disconnect': '/api/mercadolibre/disconnect/',
+                'sync': '/api/mercadolibre/sync/',
+                'statistics': '/api/mercadolibre/statistics/',
+                'publications': '/api/mercadolibre/publications/',
+                'publication_detail': '/api/mercadolibre/publications/{id}/',
+                'publication_link': '/api/mercadolibre/publications/{id}/link/',
+                'publication_unlink': '/api/mercadolibre/publications/{id}/unlink/',
+                'publication_status': '/api/mercadolibre/publications/{id}/status/',
+                'logs': '/api/mercadolibre/logs/',
             }
         }
     })
@@ -80,4 +94,5 @@ urlpatterns = [
     path('consultas/', include('apps.consultas.urls', namespace='consultas')),
     path('publicaciones/', include('apps.publicaciones.urls', namespace='publicaciones')),
     path('reuniones/', include('apps.reuniones.urls', namespace='reuniones')),
+    path('mercadolibre/', include('apps.integraciones.mercadolibre.urls', namespace='mercadolibre')),
 ]

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.consultas',
     'apps.publicaciones',
     'apps.reuniones',
+    'apps.integraciones.mercadolibre',
 ]
 
 MIDDLEWARE = [
@@ -308,5 +309,28 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'apps.integraciones.mercadolibre': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
+
+# =============================================================================
+# MERCADO LIBRE SETTINGS
+# =============================================================================
+
+ML_APP_ID = os.getenv('ML_APP_ID', '')
+ML_SECRET_KEY = os.getenv('ML_SECRET_KEY', '')
+ML_REDIRECT_URI = os.getenv(
+    'ML_REDIRECT_URI',
+    'http://localhost:8000/api/mercadolibre/auth/callback/'
+)
+
+# URL del frontend para redirecciones post-OAuth
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+# URL base para imagenes (usado al publicar en ML)
+MEDIA_BASE_URL = os.getenv('MEDIA_BASE_URL', 'http://localhost:8000')

@@ -252,3 +252,145 @@ class VehiculoViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
         return Response(serializer.data)
+
+    # =========================================================================
+    # ACCIONES MERCADO LIBRE
+    # =========================================================================
+
+    @action(detail=True, methods=['post'], url_path='publicar-ml')
+    def publicar_ml(self, request, pk=None):
+        """
+        Publica el vehiculo en Mercado Libre.
+        Requiere cuenta de ML conectada.
+        """
+        from apps.integraciones.mercadolibre.models import MLCredential
+        from apps.integraciones.mercadolibre.services import MLSyncService, MLAPIError
+
+        vehiculo = self.get_object()
+
+        # Verificar que no este ya publicado
+        if vehiculo.ml_item_id:
+            return Response(
+                {'detail': f'El vehiculo ya tiene una publicacion activa: {vehiculo.ml_item_id}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            credential = MLCredential.objects.get(is_active=True)
+        except MLCredential.DoesNotExist:
+            return Response(
+                {'detail': 'No hay cuenta de Mercado Libre conectada.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            sync_service = MLSyncService(credential)
+            publication = sync_service.publish_vehicle(vehiculo, user=request.user)
+
+            return Response({
+                'detail': 'Vehiculo publicado exitosamente en Mercado Libre.',
+                'ml_item_id': publication.ml_item_id,
+                'ml_permalink': publication.ml_permalink,
+            })
+
+        except MLAPIError as e:
+            return Response(
+                {'detail': str(e), 'ml_error': e.response_data},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['patch'], url_path='ml-status')
+    def ml_status(self, request, pk=None):
+        """
+        Cambia el estado de la publicacion en ML (pausar/activar).
+        Espera: { "status": "active" | "paused" }
+        """
+        from apps.integraciones.mercadolibre.models import MLCredential, MLPublication
+        from apps.integraciones.mercadolibre.services import MLSyncService, MLAPIError
+
+        vehiculo = self.get_object()
+        new_status = request.data.get('status')
+
+        if new_status not in ['active', 'paused']:
+            return Response(
+                {'detail': 'El estado debe ser "active" o "paused".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not vehiculo.ml_item_id:
+            return Response(
+                {'detail': 'El vehiculo no tiene publicacion en Mercado Libre.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            credential = MLCredential.objects.get(is_active=True)
+        except MLCredential.DoesNotExist:
+            return Response(
+                {'detail': 'No hay cuenta de Mercado Libre conectada.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            publication = MLPublication.objects.get(ml_item_id=vehiculo.ml_item_id)
+            sync_service = MLSyncService(credential)
+            sync_service.update_publication_status(publication, new_status, user=request.user)
+
+            action_msg = 'activada' if new_status == 'active' else 'pausada'
+            return Response({
+                'detail': f'Publicacion {action_msg} exitosamente.',
+                'ml_status': new_status,
+            })
+
+        except MLPublication.DoesNotExist:
+            return Response(
+                {'detail': 'No se encontro la publicacion en el sistema.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except MLAPIError as e:
+            return Response(
+                {'detail': str(e), 'ml_error': e.response_data},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['delete'], url_path='cerrar-ml')
+    def cerrar_ml(self, request, pk=None):
+        """Cierra definitivamente la publicacion en Mercado Libre."""
+        from apps.integraciones.mercadolibre.models import MLCredential, MLPublication
+        from apps.integraciones.mercadolibre.services import MLSyncService, MLAPIError
+
+        vehiculo = self.get_object()
+
+        if not vehiculo.ml_item_id:
+            return Response(
+                {'detail': 'El vehiculo no tiene publicacion en Mercado Libre.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            credential = MLCredential.objects.get(is_active=True)
+        except MLCredential.DoesNotExist:
+            return Response(
+                {'detail': 'No hay cuenta de Mercado Libre conectada.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            publication = MLPublication.objects.get(ml_item_id=vehiculo.ml_item_id)
+            sync_service = MLSyncService(credential)
+            sync_service.update_publication_status(publication, 'closed', user=request.user)
+
+            return Response({
+                'detail': 'Publicacion cerrada exitosamente.',
+            })
+
+        except MLPublication.DoesNotExist:
+            return Response(
+                {'detail': 'No se encontro la publicacion en el sistema.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except MLAPIError as e:
+            return Response(
+                {'detail': str(e), 'ml_error': e.response_data},
+                status=status.HTTP_400_BAD_REQUEST
+            )
