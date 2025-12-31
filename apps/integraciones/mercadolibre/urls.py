@@ -12,6 +12,8 @@ from .views import (
     MLSyncLogViewSet,
 )
 
+app_name = 'mercadolibre'
+
 router = DefaultRouter()
 router.register(r'publications', MLPublicationViewSet, basename='ml-publications')
 router.register(r'logs', MLSyncLogViewSet, basename='ml-logs')
