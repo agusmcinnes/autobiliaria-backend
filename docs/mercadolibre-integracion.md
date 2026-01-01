@@ -229,3 +229,43 @@ Al sincronizar, si encuentra un vehículo en el sistema con la misma patente, lo
 - `app/admin/mercadolibre/page.tsx` (nuevo)
 - `app/admin/mercadolibre/publicaciones/page.tsx` (nuevo)
 - `components/admin-sidebar.tsx` - Link a ML
+
+
+  Estado Actual
+
+  | Componente      | DEV                        | PROD                 |
+  |-----------------|----------------------------|----------------------|
+  | Backend ML      | ✅ Deployado y funcionando | ❌ Pendiente         |
+  | Frontend ML     | ✅ Código listo (en repo)  | ❌ Pendiente         |
+  | Migraciones     | ✅ Aplicadas               | ❌ Pendiente         |
+  | Credenciales ML | ❌ Faltan configurar       | ❌ Faltan configurar |
+
+  Cuando tengas las credenciales del cliente
+
+  Configurarlas en el servidor de dev:
+
+  ssh root@92.112.177.217
+  nano /home/deploy/autobiliaria/dev/.env.dev
+
+  # Agregar estas 3 líneas:
+  ML_APP_ID=xxx
+  ML_SECRET_KEY=xxx
+  ML_REDIRECT_URI=https://api-dev.autobiliaria.cloud/api/mercadolibre/auth/callback/
+
+  # Reiniciar
+  cd /home/deploy/autobiliaria/dev
+  docker compose -f docker-compose.dev.yml restart
+
+  Archivos clave de referencia
+
+  - Documentación técnica: docs/mercadolibre-integracion.md
+  - Plan original: /Users/agusmc/.claude/plans/piped-forging-bengio.md
+  - Servicio principal: apps/integraciones/mercadolibre/services.py
+  - Frontend pages: app/admin/mercadolibre/ (en el repo web)
+
+  Para PROD (cuando esté listo)
+
+  1. Merge develop → main en ambos repos
+  2. Cambiar redirect URI en la app de ML a la URL de prod
+  3. Configurar variables en .env.prod
+  4. Aplicar migraciones en prod
