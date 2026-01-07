@@ -40,7 +40,7 @@ class MLCredential(models.Model):
     )
     scope = models.CharField(
         _('scope'),
-        max_length=100,
+        max_length=500,
         blank=True,
         default='',
         help_text=_('Permisos otorgados: read, write, offline_access')
