@@ -144,16 +144,27 @@ class MLAuthCallbackView(APIView):
             if user_response.status_code == 200:
                 ml_nickname = user_response.json().get('nickname', '')
 
-            # Desactivar credenciales anteriores
-            MLCredential.objects.filter(is_active=True).update(is_active=False)
-
             # Obtener usuario del sistema (usar el primero activo si no hay sesion)
             from apps.usuarios.models import Usuario
             user_id = request.session.get('ml_oauth_user_id')
+            logger.info(f"ML OAuth callback - session user_id: {user_id}")
+
             if user_id:
-                user = Usuario.objects.get(id=user_id)
+                try:
+                    user = Usuario.objects.get(id=user_id)
+                except Usuario.DoesNotExist:
+                    logger.error(f"Usuario con id {user_id} no existe")
+                    user = None
             else:
                 user = Usuario.objects.filter(is_active=True).first()
+                logger.info(f"Usando primer usuario activo: {user}")
+
+            if not user:
+                logger.error("No hay usuarios activos en el sistema para vincular la cuenta ML")
+                return redirect(f"{error_url}no_user_available")
+
+            # Desactivar credenciales anteriores
+            MLCredential.objects.filter(is_active=True).update(is_active=False)
 
             # Crear nueva credencial
             credential = MLCredential.objects.create(
