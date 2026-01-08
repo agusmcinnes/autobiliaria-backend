@@ -52,12 +52,24 @@ class MLConnectionStatusView(APIView):
     """
     GET /api/mercadolibre/status/
     Retorna el estado de conexion con Mercado Libre.
+    Renueva el token automaticamente si esta por expirar.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
             credential = MLCredential.objects.get(is_active=True)
+
+            # Renovar token automáticamente si es necesario
+            if credential.needs_refresh and not credential.is_token_expired:
+                try:
+                    client = MLClient(credential)
+                    # El cliente ya renueva en __init__ si needs_refresh
+                    credential.refresh_from_db()
+                    logger.info(f"Token renovado automáticamente para {credential.ml_nickname}")
+                except Exception as e:
+                    logger.warning(f"No se pudo renovar token automáticamente: {e}")
+
             data = {
                 'connected': True,
                 'ml_user_id': credential.ml_user_id,
