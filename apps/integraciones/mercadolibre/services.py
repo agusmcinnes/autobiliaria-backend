@@ -531,7 +531,7 @@ class MLSyncService:
             "currency_id": vehiculo.moneda.codigo if hasattr(vehiculo.moneda, 'codigo') else 'ARS',
             "available_quantity": 1,
             "buying_mode": "classified",
-            "listing_type_id": "gold_special",  # Tipo de publicacion para vehiculos en MLA
+            "listing_type_id": "gold",  # Tipo de publicacion para vehiculos en MLA (gold, gold_premium, silver)
             "condition": condition,
             "pictures": pictures,
             "attributes": [
