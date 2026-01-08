@@ -479,13 +479,17 @@ class MLSyncService:
     # PUBLICACION DE VEHICULOS
     # =========================================================================
 
-    def build_item_payload(self, vehiculo) -> Dict:
+    def build_item_payload(self, vehiculo, custom_title: str = None) -> Dict:
         """
         Construye el payload para crear una publicacion en ML desde un vehiculo.
+
+        Args:
+            vehiculo: Instancia de Vehiculo
+            custom_title: Titulo personalizado opcional
         """
-        # Obtener URLs de imagenes (max 6 para ML)
+        # Obtener URLs de imagenes (max 15)
         pictures = []
-        for img in vehiculo.imagenes.order_by('orden')[:6]:
+        for img in vehiculo.imagenes.order_by('orden')[:15]:
             if img.imagen:
                 # Asegurar URL absoluta
                 img_url = img.imagen.url
@@ -513,14 +517,21 @@ class MLSyncService:
             vehiculo.caja.nombre
         )
 
+        # Usar titulo personalizado o generar uno por defecto
+        title = custom_title if custom_title else vehiculo.titulo
+
+        # Agregar patente en titulo si no esta
+        if vehiculo.patente.upper() not in title.upper():
+            title = f"{title} - {vehiculo.patente}"
+
         payload = {
-            "title": vehiculo.titulo,
+            "title": title,
             "category_id": category_id,
             "price": float(vehiculo.precio),
             "currency_id": vehiculo.moneda.codigo if hasattr(vehiculo.moneda, 'codigo') else 'ARS',
             "available_quantity": 1,
             "buying_mode": "classified",
-            "listing_type_id": "gold_pro",  # Tipo de publicacion por defecto
+            "listing_type_id": "gold_special",  # Tipo de publicacion para vehiculos en MLA
             "condition": condition,
             "pictures": pictures,
             "attributes": [
@@ -534,19 +545,16 @@ class MLSyncService:
             ],
         }
 
-        # Agregar patente en titulo si no esta
-        if vehiculo.patente.upper() not in payload['title'].upper():
-            payload['title'] = f"{payload['title']} - {vehiculo.patente}"
-
         return payload
 
-    def publish_vehicle(self, vehiculo, user=None) -> MLPublication:
+    def publish_vehicle(self, vehiculo, user=None, custom_title: str = None) -> MLPublication:
         """
         Publica un vehiculo en Mercado Libre.
 
         Args:
             vehiculo: Instancia de Vehiculo
             user: Usuario que realiza la accion
+            custom_title: Titulo personalizado opcional
 
         Returns:
             MLPublication creada
@@ -557,7 +565,7 @@ class MLSyncService:
             if existing:
                 raise MLAPIError(f"El vehiculo ya tiene una publicacion activa: {vehiculo.ml_item_id}")
 
-        payload = self.build_item_payload(vehiculo)
+        payload = self.build_item_payload(vehiculo, custom_title=custom_title)
 
         try:
             result = self.client.create_item(payload)

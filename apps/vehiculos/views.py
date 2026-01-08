@@ -262,11 +262,17 @@ class VehiculoViewSet(viewsets.ModelViewSet):
         """
         Publica el vehiculo en Mercado Libre.
         Requiere cuenta de ML conectada.
+
+        Body opcional:
+            - title: Titulo personalizado para la publicacion
         """
         from apps.integraciones.mercadolibre.models import MLCredential
         from apps.integraciones.mercadolibre.services import MLSyncService, MLAPIError
 
         vehiculo = self.get_object()
+
+        # Obtener titulo personalizado del request (opcional)
+        custom_title = request.data.get('title', None)
 
         # Verificar que no este ya publicado
         if vehiculo.ml_item_id:
@@ -285,7 +291,11 @@ class VehiculoViewSet(viewsets.ModelViewSet):
 
         try:
             sync_service = MLSyncService(credential)
-            publication = sync_service.publish_vehicle(vehiculo, user=request.user)
+            publication = sync_service.publish_vehicle(
+                vehiculo,
+                user=request.user,
+                custom_title=custom_title
+            )
 
             return Response({
                 'detail': 'Vehiculo publicado exitosamente en Mercado Libre.',
