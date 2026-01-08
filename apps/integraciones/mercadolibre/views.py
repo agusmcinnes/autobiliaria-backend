@@ -172,19 +172,21 @@ class MLAuthCallbackView(APIView):
                 logger.error("No hay usuarios activos en el sistema para vincular la cuenta ML")
                 return redirect(f"{error_url}no_user_available")
 
-            # Desactivar credenciales anteriores
-            MLCredential.objects.filter(is_active=True).update(is_active=False)
+            # Desactivar otras credenciales activas (de otros usuarios)
+            MLCredential.objects.filter(is_active=True).exclude(user=user).update(is_active=False)
 
-            # Crear nueva credencial
-            credential = MLCredential.objects.create(
+            # Crear o actualizar credencial del usuario
+            credential, created = MLCredential.objects.update_or_create(
                 user=user,
-                ml_user_id=ml_user_id,
-                ml_nickname=ml_nickname,
-                access_token=token_data['access_token'],
-                refresh_token=token_data['refresh_token'],
-                expires_at=timezone.now() + timedelta(seconds=token_data['expires_in']),
-                scope=token_data.get('scope', ''),
-                is_active=True,
+                defaults={
+                    'ml_user_id': ml_user_id,
+                    'ml_nickname': ml_nickname,
+                    'access_token': token_data['access_token'],
+                    'refresh_token': token_data['refresh_token'],
+                    'expires_at': timezone.now() + timedelta(seconds=token_data['expires_in']),
+                    'scope': token_data.get('scope', ''),
+                    'is_active': True,
+                }
             )
 
             # Log
