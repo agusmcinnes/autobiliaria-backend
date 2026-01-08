@@ -15,8 +15,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 
 from .models import MLCredential, MLPublication, MLSyncLog
+
+
 from .serializers import (
     MLConnectionStatusSerializer,
     MLAuthURLSerializer,
@@ -37,6 +40,12 @@ from .services import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class MLPublicationPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class MLConnectionStatusView(APIView):
@@ -233,6 +242,7 @@ class MLPublicationViewSet(viewsets.ModelViewSet):
     destroy: DELETE /api/mercadolibre/publications/{id}/ (solo elimina del sistema)
     """
     permission_classes = [IsAuthenticated]
+    pagination_class = MLPublicationPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['ml_status', 'vehiculo', 'created_from_system']
     search_fields = ['ml_title', 'ml_item_id', 'patente_ml', 'marca_ml', 'modelo_ml']
