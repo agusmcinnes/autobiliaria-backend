@@ -144,9 +144,6 @@ class MLAuthCallbackView(APIView):
             if user_response.status_code == 200:
                 ml_nickname = user_response.json().get('nickname', '')
 
-            # Desactivar credenciales anteriores
-            MLCredential.objects.filter(is_active=True).update(is_active=False)
-
             # Obtener usuario del sistema (usar el primero activo si no hay sesion)
             from apps.usuarios.models import Usuario
             user_id = request.session.get('ml_oauth_user_id')
@@ -155,16 +152,21 @@ class MLAuthCallbackView(APIView):
             else:
                 user = Usuario.objects.filter(is_active=True).first()
 
-            # Crear nueva credencial
-            credential = MLCredential.objects.create(
+            # Desactivar otras credenciales activas (de otros usuarios)
+            MLCredential.objects.filter(is_active=True).exclude(user=user).update(is_active=False)
+
+            # Crear o actualizar credencial del usuario
+            credential, created = MLCredential.objects.update_or_create(
                 user=user,
-                ml_user_id=ml_user_id,
-                ml_nickname=ml_nickname,
-                access_token=token_data['access_token'],
-                refresh_token=token_data['refresh_token'],
-                expires_at=timezone.now() + timedelta(seconds=token_data['expires_in']),
-                scope=token_data.get('scope', ''),
-                is_active=True,
+                defaults={
+                    'ml_user_id': ml_user_id,
+                    'ml_nickname': ml_nickname,
+                    'access_token': token_data['access_token'],
+                    'refresh_token': token_data['refresh_token'],
+                    'expires_at': timezone.now() + timedelta(seconds=token_data['expires_in']),
+                    'scope': token_data.get('scope', ''),
+                    'is_active': True,
+                }
             )
 
             # Log
