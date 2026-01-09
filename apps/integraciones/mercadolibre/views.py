@@ -456,6 +456,34 @@ class MLStatisticsView(APIView):
         return Response(serializer.data)
 
 
+class MLQuotaView(APIView):
+    """
+    GET /api/mercadolibre/quota/
+    Retorna el quota de publicaciones disponible en la cuenta de ML.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            credential = MLCredential.objects.get(is_active=True)
+        except MLCredential.DoesNotExist:
+            return Response(
+                {'detail': 'No hay cuenta de Mercado Libre conectada.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            sync_service = MLSyncService(credential)
+            quota_info = sync_service.get_quota(site_id='MLA')
+            return Response(quota_info)
+
+        except MLAPIError as e:
+            return Response(
+                {'detail': str(e), 'ml_error': e.response_data},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class MLSyncLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet de solo lectura para logs de sincronizacion.

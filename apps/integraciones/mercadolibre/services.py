@@ -149,6 +149,13 @@ class MLClient:
         """Obtiene informacion del usuario de ML."""
         return self._request('GET', f'/users/{self.credential.ml_user_id}')
 
+    def get_user_quota(self) -> List[Dict]:
+        """
+        Obtiene el quota de publicaciones del usuario por marketplace.
+        Retorna lista con quota por site_id (MLA, MLB, etc).
+        """
+        return self._request('GET', '/marketplace/users/cap')
+
     # =========================================================================
     # METODOS DE ITEMS/PUBLICACIONES
     # =========================================================================
@@ -357,6 +364,44 @@ class MLSyncService:
         return result
 
     # =========================================================================
+    # QUOTA DE PUBLICACIONES
+    # =========================================================================
+
+    def get_quota(self, site_id: str = 'MLA') -> Dict:
+        """
+        Obtiene información de quota de publicaciones para un marketplace.
+
+        Args:
+            site_id: ID del marketplace (MLA=Argentina, MLB=Brasil, etc.)
+
+        Returns:
+            Dict con quota, total_items, available y site_id
+        """
+        try:
+            data = self.client.get_user_quota()
+            # data es una lista, buscar el marketplace solicitado
+            for site_quota in data:
+                if site_quota.get('site_id') == site_id:
+                    quota = site_quota.get('quota', 0)
+                    total_items = site_quota.get('total_items', 0)
+                    return {
+                        'quota': quota,
+                        'total_items': total_items,
+                        'available': quota - total_items,
+                        'site_id': site_id
+                    }
+            # Si no se encuentra el site_id, retornar valores por defecto
+            return {
+                'quota': 0,
+                'total_items': 0,
+                'available': 0,
+                'site_id': site_id
+            }
+        except MLAPIError as e:
+            logger.error(f"Error obteniendo quota de ML: {e}")
+            raise
+
+    # =========================================================================
     # SINCRONIZACION DE PUBLICACIONES
     # =========================================================================
 
@@ -479,13 +524,18 @@ class MLSyncService:
     # PUBLICACION DE VEHICULOS
     # =========================================================================
 
-    def build_item_payload(self, vehiculo) -> Dict:
+    def build_item_payload(self, vehiculo, custom_title: str = None, doors: str = None) -> Dict:
         """
         Construye el payload para crear una publicacion en ML desde un vehiculo.
+
+        Args:
+            vehiculo: Instancia de Vehiculo
+            custom_title: Titulo personalizado opcional
+            doors: Cantidad de puertas (opcional, default segun tipo)
         """
-        # Obtener URLs de imagenes (max 6 para ML)
+        # Obtener URLs de imagenes (max 15)
         pictures = []
-        for img in vehiculo.imagenes.order_by('orden')[:6]:
+        for img in vehiculo.imagenes.order_by('orden')[:15]:
             if img.imagen:
                 # Asegurar URL absoluta
                 img_url = img.imagen.url
@@ -513,40 +563,65 @@ class MLSyncService:
             vehiculo.caja.nombre
         )
 
+        # Usar titulo personalizado o generar uno por defecto
+        title = custom_title if custom_title else vehiculo.titulo
+
+        # Agregar patente en titulo si no esta
+        if vehiculo.patente.upper() not in title.upper():
+            title = f"{title} - {vehiculo.patente}"
+
+        # Determinar cantidad de puertas (usar parametro o default segun tipo)
+        if not doors:
+            doors_map = {
+                'auto': '4',
+                'camioneta': '4',
+                'camion': '2',
+                'moto': '0',
+            }
+            doors = doors_map.get(vehiculo.tipo_vehiculo, '4')
+
+        # Version/Trim del vehiculo
+        trim = vehiculo.version if vehiculo.version else f"{vehiculo.marca.nombre} {vehiculo.modelo.nombre}"
+
         payload = {
-            "title": vehiculo.titulo,
+            "title": title,
             "category_id": category_id,
             "price": float(vehiculo.precio),
             "currency_id": vehiculo.moneda.codigo if hasattr(vehiculo.moneda, 'codigo') else 'ARS',
             "available_quantity": 1,
             "buying_mode": "classified",
-            "listing_type_id": "gold_pro",  # Tipo de publicacion por defecto
+            "listing_type_id": "silver",  # Tipo segun cupo disponible de la cuenta
             "condition": condition,
             "pictures": pictures,
+            "location": {
+                "country": {"id": "AR"},
+                "state": {"id": "AR-B"},  # Buenos Aires
+                "city": {"name": "Mar del Plata"},
+            },
             "attributes": [
                 {"id": "BRAND", "value_name": vehiculo.marca.nombre},
                 {"id": "MODEL", "value_name": vehiculo.modelo.nombre},
+                {"id": "TRIM", "value_name": trim},
+                {"id": "DOORS", "value_name": doors},
                 {"id": "VEHICLE_YEAR", "value_name": str(vehiculo.anio)},
-                {"id": "KILOMETERS", "value_name": str(vehiculo.km)},
+                {"id": "KILOMETERS", "value_name": f"{vehiculo.km} km"},
                 {"id": "FUEL_TYPE", "value_name": vehiculo.combustible.nombre},
                 {"id": "TRANSMISSION", "value_name": transmission},
                 {"id": "COLOR", "value_name": vehiculo.color},
             ],
         }
 
-        # Agregar patente en titulo si no esta
-        if vehiculo.patente.upper() not in payload['title'].upper():
-            payload['title'] = f"{payload['title']} - {vehiculo.patente}"
-
         return payload
 
-    def publish_vehicle(self, vehiculo, user=None) -> MLPublication:
+    def publish_vehicle(self, vehiculo, user=None, custom_title: str = None, doors: str = None) -> MLPublication:
         """
         Publica un vehiculo en Mercado Libre.
 
         Args:
             vehiculo: Instancia de Vehiculo
             user: Usuario que realiza la accion
+            custom_title: Titulo personalizado opcional
+            doors: Cantidad de puertas (2, 3, 4, 5)
 
         Returns:
             MLPublication creada
@@ -557,7 +632,7 @@ class MLSyncService:
             if existing:
                 raise MLAPIError(f"El vehiculo ya tiene una publicacion activa: {vehiculo.ml_item_id}")
 
-        payload = self.build_item_payload(vehiculo)
+        payload = self.build_item_payload(vehiculo, custom_title=custom_title, doors=doors)
 
         try:
             result = self.client.create_item(payload)
