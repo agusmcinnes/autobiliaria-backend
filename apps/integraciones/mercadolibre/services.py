@@ -538,7 +538,7 @@ class MLSyncService:
                 {"id": "BRAND", "value_name": vehiculo.marca.nombre},
                 {"id": "MODEL", "value_name": vehiculo.modelo.nombre},
                 {"id": "VEHICLE_YEAR", "value_name": str(vehiculo.anio)},
-                {"id": "KILOMETERS", "value_name": str(vehiculo.km)},
+                {"id": "KILOMETERS", "value_name": f"{vehiculo.km} km"},
                 {"id": "FUEL_TYPE", "value_name": vehiculo.combustible.nombre},
                 {"id": "TRANSMISSION", "value_name": transmission},
                 {"id": "COLOR", "value_name": vehiculo.color},
