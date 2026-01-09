@@ -9,6 +9,7 @@ from .views import (
     MLPublicationViewSet,
     MLSyncView,
     MLStatisticsView,
+    MLQuotaView,
     MLSyncLogViewSet,
 )
 
@@ -34,6 +35,9 @@ urlpatterns = [
 
     # Estadisticas
     path('statistics/', MLStatisticsView.as_view(), name='ml-statistics'),
+
+    # Quota
+    path('quota/', MLQuotaView.as_view(), name='ml-quota'),
 
     # ViewSets (publications, logs)
     path('', include(router.urls)),

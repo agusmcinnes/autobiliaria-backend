@@ -149,6 +149,13 @@ class MLClient:
         """Obtiene informacion del usuario de ML."""
         return self._request('GET', f'/users/{self.credential.ml_user_id}')
 
+    def get_user_quota(self) -> List[Dict]:
+        """
+        Obtiene el quota de publicaciones del usuario por marketplace.
+        Retorna lista con quota por site_id (MLA, MLB, etc).
+        """
+        return self._request('GET', '/marketplace/users/cap')
+
     # =========================================================================
     # METODOS DE ITEMS/PUBLICACIONES
     # =========================================================================
@@ -355,6 +362,44 @@ class MLSyncService:
                     result[key] = value
 
         return result
+
+    # =========================================================================
+    # QUOTA DE PUBLICACIONES
+    # =========================================================================
+
+    def get_quota(self, site_id: str = 'MLA') -> Dict:
+        """
+        Obtiene información de quota de publicaciones para un marketplace.
+
+        Args:
+            site_id: ID del marketplace (MLA=Argentina, MLB=Brasil, etc.)
+
+        Returns:
+            Dict con quota, total_items, available y site_id
+        """
+        try:
+            data = self.client.get_user_quota()
+            # data es una lista, buscar el marketplace solicitado
+            for site_quota in data:
+                if site_quota.get('site_id') == site_id:
+                    quota = site_quota.get('quota', 0)
+                    total_items = site_quota.get('total_items', 0)
+                    return {
+                        'quota': quota,
+                        'total_items': total_items,
+                        'available': quota - total_items,
+                        'site_id': site_id
+                    }
+            # Si no se encuentra el site_id, retornar valores por defecto
+            return {
+                'quota': 0,
+                'total_items': 0,
+                'available': 0,
+                'site_id': site_id
+            }
+        except MLAPIError as e:
+            logger.error(f"Error obteniendo quota de ML: {e}")
+            raise
 
     # =========================================================================
     # SINCRONIZACION DE PUBLICACIONES
