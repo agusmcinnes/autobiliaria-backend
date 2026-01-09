@@ -569,6 +569,18 @@ class MLSyncService:
         if vehiculo.patente.upper() not in title.upper():
             title = f"{title} - {vehiculo.patente}"
 
+        # Determinar cantidad de puertas segun tipo de vehiculo
+        doors_map = {
+            'auto': '4',
+            'camioneta': '4',
+            'camion': '2',
+            'moto': '0',
+        }
+        doors = doors_map.get(vehiculo.tipo_vehiculo, '4')
+
+        # Version/Trim del vehiculo
+        trim = vehiculo.version if vehiculo.version else f"{vehiculo.marca.nombre} {vehiculo.modelo.nombre}"
+
         payload = {
             "title": title,
             "category_id": category_id,
@@ -579,9 +591,16 @@ class MLSyncService:
             "listing_type_id": "silver",  # Tipo segun cupo disponible de la cuenta
             "condition": condition,
             "pictures": pictures,
+            "location": {
+                "country": {"id": "AR"},
+                "state": {"id": "AR-B"},  # Buenos Aires
+                "city": {"name": "Mar del Plata"},
+            },
             "attributes": [
                 {"id": "BRAND", "value_name": vehiculo.marca.nombre},
                 {"id": "MODEL", "value_name": vehiculo.modelo.nombre},
+                {"id": "TRIM", "value_name": trim},
+                {"id": "DOORS", "value_name": doors},
                 {"id": "VEHICLE_YEAR", "value_name": str(vehiculo.anio)},
                 {"id": "KILOMETERS", "value_name": f"{vehiculo.km} km"},
                 {"id": "FUEL_TYPE", "value_name": vehiculo.combustible.nombre},
