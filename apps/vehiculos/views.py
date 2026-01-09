@@ -265,14 +265,16 @@ class VehiculoViewSet(viewsets.ModelViewSet):
 
         Body opcional:
             - title: Titulo personalizado para la publicacion
+            - doors: Cantidad de puertas (2, 3, 4, 5)
         """
         from apps.integraciones.mercadolibre.models import MLCredential
         from apps.integraciones.mercadolibre.services import MLSyncService, MLAPIError
 
         vehiculo = self.get_object()
 
-        # Obtener titulo personalizado del request (opcional)
+        # Obtener parametros del request (opcionales)
         custom_title = request.data.get('title', None)
+        doors = request.data.get('doors', None)
 
         # Verificar que no este ya publicado
         if vehiculo.ml_item_id:
@@ -294,7 +296,8 @@ class VehiculoViewSet(viewsets.ModelViewSet):
             publication = sync_service.publish_vehicle(
                 vehiculo,
                 user=request.user,
-                custom_title=custom_title
+                custom_title=custom_title,
+                doors=doors
             )
 
             return Response({

@@ -524,13 +524,14 @@ class MLSyncService:
     # PUBLICACION DE VEHICULOS
     # =========================================================================
 
-    def build_item_payload(self, vehiculo, custom_title: str = None) -> Dict:
+    def build_item_payload(self, vehiculo, custom_title: str = None, doors: str = None) -> Dict:
         """
         Construye el payload para crear una publicacion en ML desde un vehiculo.
 
         Args:
             vehiculo: Instancia de Vehiculo
             custom_title: Titulo personalizado opcional
+            doors: Cantidad de puertas (opcional, default segun tipo)
         """
         # Obtener URLs de imagenes (max 15)
         pictures = []
@@ -569,14 +570,15 @@ class MLSyncService:
         if vehiculo.patente.upper() not in title.upper():
             title = f"{title} - {vehiculo.patente}"
 
-        # Determinar cantidad de puertas segun tipo de vehiculo
-        doors_map = {
-            'auto': '4',
-            'camioneta': '4',
-            'camion': '2',
-            'moto': '0',
-        }
-        doors = doors_map.get(vehiculo.tipo_vehiculo, '4')
+        # Determinar cantidad de puertas (usar parametro o default segun tipo)
+        if not doors:
+            doors_map = {
+                'auto': '4',
+                'camioneta': '4',
+                'camion': '2',
+                'moto': '0',
+            }
+            doors = doors_map.get(vehiculo.tipo_vehiculo, '4')
 
         # Version/Trim del vehiculo
         trim = vehiculo.version if vehiculo.version else f"{vehiculo.marca.nombre} {vehiculo.modelo.nombre}"
@@ -611,7 +613,7 @@ class MLSyncService:
 
         return payload
 
-    def publish_vehicle(self, vehiculo, user=None, custom_title: str = None) -> MLPublication:
+    def publish_vehicle(self, vehiculo, user=None, custom_title: str = None, doors: str = None) -> MLPublication:
         """
         Publica un vehiculo en Mercado Libre.
 
@@ -619,6 +621,7 @@ class MLSyncService:
             vehiculo: Instancia de Vehiculo
             user: Usuario que realiza la accion
             custom_title: Titulo personalizado opcional
+            doors: Cantidad de puertas (2, 3, 4, 5)
 
         Returns:
             MLPublication creada
@@ -629,7 +632,7 @@ class MLSyncService:
             if existing:
                 raise MLAPIError(f"El vehiculo ya tiene una publicacion activa: {vehiculo.ml_item_id}")
 
-        payload = self.build_item_payload(vehiculo, custom_title=custom_title)
+        payload = self.build_item_payload(vehiculo, custom_title=custom_title, doors=doors)
 
         try:
             result = self.client.create_item(payload)
