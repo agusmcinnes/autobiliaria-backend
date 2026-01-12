@@ -73,9 +73,9 @@ class MLCredential(models.Model):
 
     @property
     def needs_refresh(self):
-        """Verifica si el token necesita renovarse (30 min antes de expirar)."""
+        """Verifica si el token necesita renovarse (2 horas antes de expirar)."""
         from datetime import timedelta
-        buffer_time = self.expires_at - timedelta(minutes=30)
+        buffer_time = self.expires_at - timedelta(hours=2)
         return timezone.now() >= buffer_time
 
 
