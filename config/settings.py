@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     'apps.publicaciones',
     'apps.reuniones',
     'apps.integraciones.mercadolibre',
+    'apps.clientes',
+    'apps.reservas',
+    'apps.notas',
 ]
 
 MIDDLEWARE = [

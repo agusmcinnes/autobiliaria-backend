@@ -80,6 +80,28 @@ def api_root(request):
                 'publication_unlink': '/api/mercadolibre/publications/{id}/unlink/',
                 'publication_status': '/api/mercadolibre/publications/{id}/status/',
                 'logs': '/api/mercadolibre/logs/',
+            },
+            'clientes': {
+                'list': '/api/clientes/',
+                'detail': '/api/clientes/{id}/',
+                'buscar': '/api/clientes/buscar/?dni=X',
+            },
+            'reservas': {
+                'list': '/api/reservas/',
+                'detail': '/api/reservas/{id}/',
+                'estadisticas': '/api/reservas/estadisticas/',
+                'formas_pago': '/api/reservas/{id}/formas-pago/',
+                'gastos': '/api/reservas/{id}/gastos/',
+                'notas': '/api/reservas/{id}/notas/',
+                'cambiar_estado': '/api/reservas/{id}/cambiar-estado/',
+                'marcar_entregado': '/api/reservas/{id}/marcar-entregado/',
+                'marcar_transferido': '/api/reservas/{id}/marcar-transferido/',
+                'anular': '/api/reservas/{id}/anular/',
+            },
+            'notas_diarias': {
+                'list': '/api/notas/?fecha=YYYY-MM-DD',
+                'create': '/api/notas/',
+                'delete': '/api/notas/{id}/',
             }
         }
     })
@@ -95,4 +117,7 @@ urlpatterns = [
     path('publicaciones/', include('apps.publicaciones.urls', namespace='publicaciones')),
     path('reuniones/', include('apps.reuniones.urls', namespace='reuniones')),
     path('mercadolibre/', include('apps.integraciones.mercadolibre.urls', namespace='mercadolibre')),
+    path('clientes/', include('apps.clientes.urls', namespace='clientes')),
+    path('reservas/', include('apps.reservas.urls', namespace='reservas')),
+    path('notas/', include('apps.notas.urls', namespace='notas')),
 ]
