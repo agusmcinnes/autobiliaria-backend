@@ -59,6 +59,9 @@ class MLClient:
         Renueva el access_token usando el refresh_token.
         Retorna True si fue exitoso.
         """
+        logger.info(f"Iniciando refresh de token ML para user {self.credential.ml_user_id}")
+        logger.info(f"Token actual expira en: {self.credential.expires_at}")
+
         try:
             response = requests.post(
                 f"{self.BASE_URL}/oauth/token",
@@ -72,6 +75,7 @@ class MLClient:
 
             if response.status_code == 200:
                 data = response.json()
+                old_expires = self.credential.expires_at
                 self.credential.access_token = data['access_token']
                 self.credential.refresh_token = data['refresh_token']
                 self.credential.expires_at = timezone.now() + timedelta(seconds=data['expires_in'])
@@ -81,26 +85,46 @@ class MLClient:
                 MLSyncLog.objects.create(
                     action=MLSyncLog.ActionType.REFRESH_TOKEN,
                     success=True,
-                    response_data=data
+                    response_data={
+                        'old_expires_at': str(old_expires),
+                        'new_expires_at': str(self.credential.expires_at),
+                        'expires_in': data['expires_in'],
+                    }
                 )
                 logger.info(f"Token ML renovado exitosamente para user {self.credential.ml_user_id}")
+                logger.info(f"Nuevo token expira en: {self.credential.expires_at}")
                 return True
             else:
                 error_data = response.json() if response.content else {}
-                self.credential.is_active = False
-                self.credential.save()
+                error_msg = f"HTTP {response.status_code}: {error_data.get('message', 'Unknown error')}"
+
+                # Errores específicos de ML que indican token inválido/revocado
+                error_code = error_data.get('error', '')
+                if error_code in ['invalid_grant', 'invalid_token'] or response.status_code == 400:
+                    logger.error(f"Token de ML invalidado/revocado. Se requiere reconexión manual.")
+                    self.credential.is_active = False
+                    self.credential.save()
+                else:
+                    # Para otros errores, no desactivar inmediatamente
+                    logger.warning(f"Error temporal renovando token ML, no se desactiva: {error_msg}")
 
                 MLSyncLog.objects.create(
                     action=MLSyncLog.ActionType.REFRESH_TOKEN,
                     success=False,
                     response_data=error_data,
-                    error_message=f"HTTP {response.status_code}: {error_data.get('message', 'Unknown error')}"
+                    error_message=error_msg
                 )
                 logger.error(f"Error renovando token ML: {error_data}")
                 return False
 
         except requests.RequestException as e:
             logger.exception(f"Error de conexion renovando token ML: {e}")
+            # No desactivar por errores de red temporales
+            MLSyncLog.objects.create(
+                action=MLSyncLog.ActionType.REFRESH_TOKEN,
+                success=False,
+                error_message=f"Error de conexión: {str(e)}"
+            )
             return False
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict:
