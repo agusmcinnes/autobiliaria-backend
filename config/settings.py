@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.integraciones.mercadolibre',
     'apps.clientes',
     'apps.reservas',
+    'apps.notas',
 ]
 
 MIDDLEWARE = [

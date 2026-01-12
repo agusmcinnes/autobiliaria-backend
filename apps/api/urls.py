@@ -97,6 +97,11 @@ def api_root(request):
                 'marcar_entregado': '/api/reservas/{id}/marcar-entregado/',
                 'marcar_transferido': '/api/reservas/{id}/marcar-transferido/',
                 'anular': '/api/reservas/{id}/anular/',
+            },
+            'notas_diarias': {
+                'list': '/api/notas/?fecha=YYYY-MM-DD',
+                'create': '/api/notas/',
+                'delete': '/api/notas/{id}/',
             }
         }
     })
@@ -114,4 +119,5 @@ urlpatterns = [
     path('mercadolibre/', include('apps.integraciones.mercadolibre.urls', namespace='mercadolibre')),
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),
     path('reservas/', include('apps.reservas.urls', namespace='reservas')),
+    path('notas/', include('apps.notas.urls', namespace='notas')),
 ]
