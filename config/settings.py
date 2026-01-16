@@ -149,6 +149,41 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+# =============================================================================
+# CLOUDFLARE R2 STORAGE (opcional)
+# =============================================================================
+
+USE_R2_STORAGE = os.getenv('USE_R2_STORAGE', 'False').lower() == 'true'
+
+if USE_R2_STORAGE:
+    # Usar django-storages con S3 compatible (Cloudflare R2)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    # Credenciales R2
+    AWS_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'autobiliaria')
+    AWS_S3_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = 'auto'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+    # URLs publicas (sin query string de autenticacion)
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_CUSTOM_DOMAIN = os.getenv('R2_CUSTOM_DOMAIN')
+
+    # Sobrescribir MEDIA_URL para usar el dominio de R2
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

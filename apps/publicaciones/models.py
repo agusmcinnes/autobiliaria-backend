@@ -1,6 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from io import BytesIO
+import sys
+import os
 
 
 class TipoVehiculo(models.TextChoices):
@@ -159,3 +164,44 @@ class ImagenPublicacion(models.Model):
 
     def __str__(self):
         return f"Imagen {self.orden} - {self.publicacion}"
+
+    def save(self, *args, **kwargs):
+        # Comprimir imagen antes de guardar (solo si es nueva o cambio)
+        if self.imagen and hasattr(self.imagen, 'file'):
+            self._compress_image()
+        super().save(*args, **kwargs)
+
+    def _compress_image(self):
+        """Comprime y redimensiona la imagen a JPEG 80% calidad, max 1920x1080."""
+        try:
+            img = Image.open(self.imagen)
+
+            # Convertir a RGB si es necesario (RGBA, P -> RGB para JPEG)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+
+            # Redimensionar si es muy grande (mantiene aspect ratio)
+            max_size = (1920, 1080)
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+            # Comprimir a JPEG 80%
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=80, optimize=True)
+            output.seek(0)
+
+            # Generar nuevo nombre con extension .jpg
+            original_name = os.path.splitext(self.imagen.name)[0]
+            new_name = f"{original_name.split('/')[-1]}.jpg"
+
+            # Reemplazar archivo
+            self.imagen = InMemoryUploadedFile(
+                output,
+                'ImageField',
+                new_name,
+                'image/jpeg',
+                sys.getsizeof(output),
+                None
+            )
+        except Exception:
+            # Si falla la compresion, guardar imagen original
+            pass
